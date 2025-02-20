@@ -1,28 +1,26 @@
 import pandas as pd
-import joblib
 from bertopic import BERTopic
-from utils.text_preprocessing import preprocess_text  # Assuming this function is in utils
+import joblib
+from backend.utils.text_preprocessing import preprocess_text
 
-# Load dataset (using an absolute path)
-data = pd.read_csv('/home/aditya/Programs/Git_HUB/Topic-Modeling/backend/data/dataset.csv')
+# Step 1: Load Dataset
+data = pd.read_csv("backend/data/dataset.csv")  # Ensure dataset.csv exists
+documents = data["content"].dropna().tolist()   # Ensure 'content' column exists
 
-# Ensure the correct column is used (here, 'content')
-if 'content' not in data.columns:
-    raise KeyError("The dataset must contain a 'content' column.")
+# Step 2: Preprocess Text
+preprocessed_docs = [preprocess_text(doc) for doc in documents]
 
-# Preprocess documents
-preprocessed_docs = [preprocess_text(doc) for doc in data['content'].dropna()]
-
-# Train BERTopic model using the same transformer model
-topic_model = BERTopic(embedding_model="all-MiniLM-L6-v2")
+# Step 3: Train BERTopic Model with a heavier transformer model
+# Example: using "paraphrase-mpnet-base-v2" for richer embeddings
+topic_model = BERTopic(embedding_model="paraphrase-mpnet-base-v2", verbose=True)
 topics, probs = topic_model.fit_transform(preprocessed_docs)
 
-# Save the trained model
-topic_model.save('/home/aditya/Programs/Git_HUB/Topic-Modeling/backend/models/bertopic_model')
+# Step 4: Save the trained BERTopic model
+topic_model.save("backend/models/bertopic_model")
 
-print("BERTopic model trained and saved successfully!")
+print("BERTopic model trained and saved successfully with a heavier model!")
 
-# Optionally, export topic details to CSV
+# Step 5 (Optional): Save Topics to CSV for Analysis
 topic_info = topic_model.get_topic_info()
-topic_info.to_csv('/home/aditya/Programs/Git_HUB/Topic-Modeling/backend/data/topics.csv', index=False)
+topic_info.to_csv("backend/data/topics.csv", index=False)
 print("Topics saved for analysis!")
